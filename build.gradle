@@ -1,0 +1,85 @@
+defaultTasks 'clean', 'test'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'net.serenity-bdd.aggregator'
+apply plugin: 'org.sonarqube'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group 'co.com.tuya.certificacion'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    ext {
+        serenityVersion = "2.3.13"
+        serenityGradleVersion = "2.3.13"
+        serenityCucumberVersion = "2.2.6"
+    }
+    dependencies {
+        classpath("net.serenity-bdd:serenity-gradle-plugin:$rootProject.ext.serenityGradleVersion")
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7"
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "io.cucumber:cucumber-core:5.0.0"
+    }
+}
+
+dependencies {
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
+    implementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
+
+    implementation "net.serenity-bdd:serenity-core:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-junit:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay-webdriver:$rootProject.ext.serenityVersion",
+            "net.serenity-bdd:serenity-screenplay-rest:$rootProject.ext.serenityVersion"
+
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation group: 'org.json', name: 'json', version: '20201115'
+
+    testImplementation "net.serenity-bdd:serenity-cucumber5:$rootProject.ext.serenityCucumberVersion",
+            "junit:junit:4.12",
+            "org.assertj:assertj-core:3.8.0"
+    implementation 'junit:junit:4.12'
+
+
+}
+
+test {
+    systemProperties System.getProperties()
+    systemProperty "file.encoding", "UTF-8"
+    systemProperty "feature.file.encoding", "UTF-8"
+    systemProperty "cucumber.options", System.properties.getProperty("cucumber.options")
+    System.properties.setProperty('http.proxyHost', '10.169.104.166')
+    System.properties.setProperty('http.proxyPort', '8080')
+    testLogging.showStandardStreams = true
+    finalizedBy(aggregate)
+}
+
+sonarqube {
+    properties {
+        property "sonar.host.url", System.properties.getProperty("sonar.host.url")
+        property "sonar.login", System.properties.getProperty("sonar.login")
+        property "sonar.projectKey", "aut-nuevaapp-backend"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.projectName", "aut-nuevaapp-backend"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding('UTF-8')
+}
